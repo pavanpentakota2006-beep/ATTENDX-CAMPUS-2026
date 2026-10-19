@@ -1,0 +1,36 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: attendx-campus-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/attendx_campus_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:rootpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+
+attendx:
+  jwt:
+    secret: ${JWT_SECRET:attendx_campus_2026_super_secure_jwt_secret_key_minimum_256_bits_length_here}
+    expiration-ms: 86400000 # 24 hours
+  qr:
+    token-validity-seconds: 20
+    geo-fence-tolerance-meters: 35.0
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+    timeout-ms: 5000
+  timezone: Asia/Kolkata

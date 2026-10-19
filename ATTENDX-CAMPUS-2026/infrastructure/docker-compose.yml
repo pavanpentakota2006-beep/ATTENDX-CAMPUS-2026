@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: attendx_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: attendx_campus_db
+      TZ: Asia/Kolkata
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../database/schema/attendx_schema.sql:/docker-entrypoint-initdb.d/1_schema.sql
+      - ../database/seed/attendx_seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
+    networks:
+      - attendx_net
+
+  ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: ../infrastructure/docker/Dockerfile.ai-service
+    container_name: attendx_ai_service
+    restart: always
+    environment:
+      TZ: Asia/Kolkata
+    ports:
+      - "8000:8000"
+    networks:
+      - attendx_net
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/Dockerfile.backend
+    container_name: attendx_backend
+    restart: always
+    depends_on:
+      - mysql
+      - ai-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/attendx_campus_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      AI_SERVICE_URL: http://ai-service:8000
+      JWT_SECRET: attendx_campus_2026_super_secure_jwt_secret_key_minimum_256_bits_length_here
+      TZ: Asia/Kolkata
+    ports:
+      - "8080:8080"
+    networks:
+      - attendx_net
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
+    container_name: attendx_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "5173:80"
+    networks:
+      - attendx_net
+
+volumes:
+  mysql_data:
+
+networks:
+  attendx_net:
+    driver: bridge
